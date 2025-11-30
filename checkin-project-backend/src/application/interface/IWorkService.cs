@@ -1,0 +1,31 @@
+using CheckinProjectBackend.Application.Dtos;
+
+namespace CheckinProjectBackend.Application.Interfaces;
+
+public interface IWorkService
+{
+    Task<WorkRegisterDto> CheckInAsync(
+        int employeeId,
+        CancellationToken cancellationToken = default);
+
+    Task<WorkRegisterDto> CheckOutAsync(
+        int employeeId,
+        CancellationToken cancellationToken = default);
+
+    // Lista paginada usada no dashboard do gestor
+    Task<IReadOnlyList<WorkRegisterDto>> ListAsync(
+        string? name,
+        DateTime? date,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default);
+
+    // Esses dois são “extra”, via e-mail, se você quiser usar
+    Task<WorkRegisterDto> RegisterCheckinAsync(
+        string email,
+        CancellationToken cancellationToken = default);
+
+    Task<WorkRegisterDto?> RegisterCheckoutAsync(
+        string email,
+        CancellationToken cancellationToken = default);
+}

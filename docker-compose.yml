@@ -1,0 +1,61 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: checkin_postgres
+    environment:
+      POSTGRES_USER: checkin
+      POSTGRES_PASSWORD: checkinpass
+      POSTGRES_DB: checkin_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: checkin_rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"    # protocolo AMQP
+      - "15672:15672"  # painel web http://localhost:15672
+
+  backend:
+    build:
+      context: ./checkin-project-backend
+      dockerfile: Dockerfile
+    container_name: checkin_backend
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+
+      # NOME CORRETO DA CONNECTION STRING (igual ao appsettings.json)
+      ConnectionStrings__Default: "Host=postgres;Port=5432;Database=checkin_db;Username=checkin;Password=checkinpass"
+
+      RabbitMq__HostName: "rabbitmq"
+      RabbitMq__UserName: "guest"
+      RabbitMq__Password: "guest"
+      RabbitMq__QueueName: "work-events"
+    depends_on:
+      - postgres
+      - rabbitmq
+    ports:
+      - "5204:8080"
+
+  frontend:
+    build:
+      context: ./checkin-project-frontend
+      dockerfile: Dockerfile
+    container_name: checkin_frontend
+    environment:
+      # O NAVEGADOR ACESSA POR localhost:5204, NÃO "backend"
+      VITE_API_BASE_URL: "http://localhost:5204"
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
+
+volumes:
+  postgres_data:
