@@ -6,6 +6,7 @@ using CheckinProjectBackend.Infrastructure.Persistence;
 using CheckinProjectBackend.Infrastructure.Repositories;
 using CheckinProjectBackend.Infrastructure.RabbitMq;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 
@@ -18,21 +19,30 @@ var connectionString = builder.Configuration.GetConnectionString("Default");
 builder.Services.Configure<RabbitMqOptions>(
     builder.Configuration.GetSection("RabbitMq"));
 
-builder.Services.AddSingleton<IConnection>(sp =>
+builder.Services.AddSingleton<IWorkEventPublisher>(sp =>
 {
-    var options = sp.GetRequiredService<IOptions<RabbitMqOptions>>().Value;
+    var options = sp.GetRequiredService<IOptions<RabbitMqOptions>>();
+    var logger = sp.GetRequiredService<ILogger<RabbitMqWorkEventPublisher>>();
 
-    var factory = new ConnectionFactory()
+    try
     {
-        HostName = options.HostName,
-        UserName = options.UserName,
-        Password = options.Password
-    };
+        var config = options.Value;
+        var factory = new ConnectionFactory()
+        {
+            HostName = config.HostName,
+            UserName = config.UserName,
+            Password = config.Password
+        };
 
-    return factory.CreateConnection();
+        var connection = factory.CreateConnection();
+        return new RabbitMqWorkEventPublisher(options, connection);
+    }
+    catch (Exception ex)
+    {
+        logger.LogWarning(ex, "RabbitMQ not reachable, falling back to no-op publisher.");
+        return new NoopWorkEventPublisher();
+    }
 });
-
-builder.Services.AddSingleton<IWorkEventPublisher, RabbitMqWorkEventPublisher>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
