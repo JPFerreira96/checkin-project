@@ -1,11 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using CheckinProjectBackend.Domain.Entities;
+using CheckinProjectBackend.Infrastructure.Persistence;
 
-// TROCAR pelos namespaces reais que aparecem em Employee.cs e AppDbContext.cs
-using CheckinProjectBackend.Domain.Entities;          // ← copie do Employee.cs
-using CheckinProjectBackend.Infrastructure.Persistence; // ← copie do AppDbContext.cs
-
-namespace CheckinProjectBackend.Controllers; // ← copie do AuthController/WorkController
+namespace CheckinProjectBackend.Controllers;
 
 [ApiController]
 [Route("dev")]
@@ -21,7 +19,6 @@ public class DevController : ControllerBase
     [HttpPost("seed")]
     public async Task<IActionResult> Seed(CancellationToken cancellationToken)
     {
-        // Se já tiver funcionários, não duplica
         if (await _db.Employees.AnyAsync(cancellationToken))
         {
             var all = await _db.Employees.ToListAsync(cancellationToken);

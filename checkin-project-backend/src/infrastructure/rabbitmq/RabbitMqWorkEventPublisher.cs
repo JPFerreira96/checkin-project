@@ -3,25 +3,26 @@ using System.Text.Json;
 using CheckinProjectBackend.Domain.Common;
 using CheckinProjectBackend.Domain.Repositories;
 using Microsoft.Extensions.Options;
-using RabbitMQ.Client;
+using RabbitMQ.Client; // pode continuar aqui, sem problema
 
 namespace CheckinProjectBackend.Infrastructure.RabbitMq;
 
 public sealed class RabbitMqWorkEventPublisher : IWorkEventPublisher, IDisposable
 {
-    private readonly IConnection _connection;
+    // força a usar os tipos do RabbitMQ
+    private readonly RabbitMQ.Client.IConnection _connection;
     private readonly RabbitMqOptions _options;
-    private IModel? _channel;
+    private RabbitMQ.Client.IModel? _channel;
 
     public RabbitMqWorkEventPublisher(
         IOptions<RabbitMqOptions> options,
-        IConnection connection)
+        RabbitMQ.Client.IConnection connection)
     {
         _options = options.Value;
         _connection = connection;
     }
 
-    private IModel Channel
+    private RabbitMQ.Client.IModel Channel
     {
         get
         {

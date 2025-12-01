@@ -12,7 +12,6 @@ public interface IWorkService
         int employeeId,
         CancellationToken cancellationToken = default);
 
-    // Lista paginada usada no dashboard do gestor
     Task<IReadOnlyList<WorkRegisterDto>> ListAsync(
         string? name,
         DateTime? date,
@@ -20,7 +19,6 @@ public interface IWorkService
         int pageSize,
         CancellationToken cancellationToken = default);
 
-    // Esses dois são “extra”, via e-mail, se você quiser usar
     Task<WorkRegisterDto> RegisterCheckinAsync(
         string email,
         CancellationToken cancellationToken = default);

@@ -3,7 +3,7 @@ using CheckinProjectBackend.Application.Interfaces;
 using CheckinProjectBackend.Domain.Common;
 using CheckinProjectBackend.Domain.Entities;
 using CheckinProjectBackend.Domain.Repositories;
-using Microsoft.Extensions.Logging;
+// using Microsoft.Extensions.Logging;
 
 namespace CheckinProjectBackend.Application.Services;
 
@@ -12,6 +12,7 @@ public sealed class WorkService : IWorkService
     private readonly IWorkRegisterRepository _workRegisterRepository;
     private readonly IEmployeeRepository _employeeRepository;
     private readonly ILogger<WorkService> _logger;
+    private readonly IWorkEventPublisher _workEventPublisher; // ← ADICIONAR ISSO
 
     public WorkService(
         IWorkRegisterRepository workRegisterRepository,
@@ -21,34 +22,16 @@ public sealed class WorkService : IWorkService
     )
     {
         _workRegisterRepository = workRegisterRepository;
-        _employeeRepository = employeeRepository;
-        _logger = logger;
-        _workEventPublisher = workEventPublisher;
+        _employeeRepository     = employeeRepository;
+        _logger                 = logger;
+        _workEventPublisher     = workEventPublisher;
     }
-
-    // public async Task<WorkRegisterDto> CheckInAsync(int employeeId, CancellationToken cancellationToken = default)
-    // {
-    //     _logger.LogInformation("Check-in solicitado para funcionário {EmployeeId}", employeeId);
-
-    //     var employee = await _employeeRepository.GetByIdAsync(employeeId, cancellationToken)
-    //                    ?? throw new InvalidOperationException("Funcionário não encontrado.");
-
-    //     var open = await _workRegisterRepository.GetOpenRecordAsync(employeeId, cancellationToken);
-    //     if (open is not null)
-    //         throw new InvalidOperationException("Já existe um check-in em aberto.");
-
-    //     var record = new WorkRegister(employeeId, DateTime.UtcNow);
-    //     await _workRegisterRepository.AddAsync(record, cancellationToken);
-
-    //     return MapToDto(record, employee.Name);
-    // }
 
     public async Task<WorkRegisterDto> RegisterCheckinAsync(
         string email,
         CancellationToken cancellationToken = default
     )
     {
-        // Carrega funcionário pelo e-mail
         var employee =
             await _employeeRepository.GetByEmailAsync(email, cancellationToken)
             ?? throw new InvalidOperationException("Funcionário não encontrado.");
@@ -65,10 +48,8 @@ public sealed class WorkService : IWorkService
 
         await _workRegisterRepository.AddAsync(record, cancellationToken);
 
-        // garante que o Employee está preenchido para o DTO
         record.Employee = employee;
 
-        // → PUBLICA EVENTO NO RABBITMQ
         var evt = new WorkEventMessage
         {
             EventType = "checkin",
@@ -159,7 +140,7 @@ public sealed class WorkService : IWorkService
 
         if (openRecord is null)
         {
-            return null; // não há registro aberto
+            return null;
         }
 
         var nowUtc = DateTime.UtcNow;
