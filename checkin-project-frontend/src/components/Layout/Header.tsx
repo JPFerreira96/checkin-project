@@ -1,7 +1,7 @@
 // src/components/Layout/Header.tsx
 import React from "react";
 import { useAuth } from "../../context/AuthContext";
-import logoMoura from "../../assets/logo-moura.png";  // 👈 ajusta isso
+import logoMoura from "../../assets/logo-moura.png";
 
 export const Header: React.FC = () => {
   const { user, logout } = useAuth();

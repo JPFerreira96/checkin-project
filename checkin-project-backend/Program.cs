@@ -79,10 +79,9 @@ app.UseSwaggerUI(c =>
     c.RoutePrefix = "swagger";
 });
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseHttpsRedirection();
-}
+app.UseHttpsRedirection();
+
+app.UseRouting();
 
 app.UseCors(FrontendCorsPolicy);
 app.UseAuthorization();
