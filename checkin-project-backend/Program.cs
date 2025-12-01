@@ -59,7 +59,6 @@ builder.Services.AddCors(options =>
     });
 });
 
-
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -72,20 +71,23 @@ using (var scope = app.Services.CreateScope())
 }
 
 
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Check-in API v1");
+    c.RoutePrefix = "swagger";
+});
+
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseHttpsRedirection();
 }
 
 app.UseCors(FrontendCorsPolicy);
-app.UseHttpsRedirection();
 app.UseAuthorization();
 
-// Health rápido
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 
 app.MapControllers();
 
 app.Run();
-
